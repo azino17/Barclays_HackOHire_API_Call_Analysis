@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Security</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* Security specific styles */
+        .security-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .security-overview {
+            grid-column: span 3;
+        }
+        
+        .security-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .stat-card.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .threat-list {
+            list-style: none;
+        }
+        
+        .threat-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        
+        .threat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .threat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .threat-icon.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .threat-icon.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .threat-icon.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .threat-content {
+            flex: 1;
+        }
+        
+        .threat-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .threat-badge {
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .threat-badge.critical {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .threat-badge.warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .threat-badge.info {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .threat-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .threat-time {
+            font-size: 12px;
+            color: #919191;
+            flex-shrink: 0;
+        }
+        
+        .security-map {
+            height: 300px;
+            position: relative;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/800/300') no-repeat center center;
+            background-size: cover;
+            opacity: 0.7;
+        }
+        
+        .attack-point {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--danger);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 0 rgba(255, 86, 48, 0.4);
+            animation: pulse 2s infinite;
+        }
+        
+        .attack-point.warning {
+            background: var(--warning);
+            box-shadow: 0 0 0 rgba(255, 171, 0, 0.4);
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 86, 48, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(255, 86, 48, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 86, 48, 0);
+            }
+        }
+        
+        .security-policy {
+            height: 100%;
+        }
+        
+        .policy-list {
+            list-style: none;
+        }
+        
+        .policy-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .policy-item:last-child {
+            border-bottom: none;
+        }
+        
+        .policy-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        
+        .policy-content {
+            flex: 1;
+        }
+        
+        .policy-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        
+        .policy-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .policy-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .policy-status.active {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .policy-status.pending {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .compliance-chart {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px 0;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: conic-gradient(var(--success) 0% 92%, #e0e0e0 92% 100%);
+            position: relative;
+        }
+        
+        .chart-circle.medium {
+            background: conic-gradient(var(--primary) 0% 85%, #e0e0e0 85% 100%);
+        }
+        
+        .chart-circle.low {
+            background: conic-gradient(var(--warning) 0% 78%, #e0e0e0 78% 100%);
+        }
+        
+        .chart-inner {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            background: white;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--success);
+        }
+        
+        .chart-value.medium {
+            color: var(--primary);
+        }
+        
+        .chart-value.low {
+            color: var(--warning);
+        }
+        
+        .chart-label {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .security-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .security-overview,
+            .threat-map {
+                grid-column: span 2;
+            }
+            
+            .security-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .security-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .security-overview,
+            .threat-map {
+                grid-column: span 1;
+            }
+            
+            .security-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .compliance-chart {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .chart-container {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i> 
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search security threats, policies, or compliance...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="security-dashboard">
+                <!-- Security Overview Card -->
+                <div class="card security-overview">
+                    <div class="card-header">
+                        <h3>Security Posture Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="security-stats">
+                        <div class="stat-card critical">
+                            <span>Critical Threats</span>
+                            <h4>5</h4>
+                        </div>
+                        <div class="stat-card warning">
+                            <span>Warning Alerts</span>
+                            <h4>12</h4>
+                        </div>
+                        <div class="stat-card success">
+                            <span>Secured APIs</span>
+                            <h4>98%</h4>
+                        </div>
+                        <div class="stat-card info">
+                            <span>Blocked Attacks</span>
+                            <h4>438</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Active Threats Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Active Security Threats</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="threat-list">
+                        <li class="threat-item">
+                            <div class="threat-icon critical">
+                                <i class="fas fa-bug"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>SQL Injection Attempt <span class="threat-badge critical">Critical</span></h4>
+                                <p>Multiple malicious queries detected on Customer API</p>
+                            </div>
+                            <div class="threat-time">Active</div>
+                        </li>
+                        <li class="threat-item">
+                            <div class="threat-icon warning">
+                                <i class="fas fa-user-secret"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>Suspicious Authentication <span class="threat-badge warning">Warning</span></h4>
+                                <p>Multiple failed login attempts from unknown locations</p>
+                            </div>
+                            <div class="threat-time">12m ago</div>
+                        </li>
+                        <li class="threat-item">
+                            <div class="threat-icon critical">
+                                <i class="fas fa-skull-crossbones"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>DDoS Attack <span class="threat-badge critical">Critical</span></h4>
+                                <p>Abnormal traffic spike detected on Payment Gateway</p>
+                            </div>
+                            <div class="threat-time">35m ago</div>
+                        </li>
+                        <li class="threat-item">
+                            <div class="threat-icon warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>API Key Misuse <span class="threat-badge warning">Warning</span></h4>
+                                <p>Unusual usage pattern detected from client #284521</p>
+                            </div>
+                            <div class="threat-time">58m ago</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Security Policies Card -->
+                <div class="card security-policy">
+                    <div class="card-header">
+                        <h3>Security Policies</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="policy-list">
+                        <li class="policy-item">
+                            <div class="policy-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="policy-content">
+                                <h4>OAuth 2.0 Enforcement</h4>
+                                <p>All APIs must use OAuth 2.0 with proper scopes</p>
+                            </div>
+                            <span class="policy-status active">Active</span>
+                        </li>
+                        <li class="policy-item">
+                            <div class="policy-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="policy-content">
+                                <h4>API Key Rotation</h4>
+                                <p>Automatic key rotation every 90 days</p>
+                            </div>
+                            <span class="policy-status active">Active</span>
+                        </li>
+                        <li class="policy-item">
+                            <div class="policy-icon">
+                                <i class="fas fa-filter"></i>
+                            </div>
+                            <div class="policy-content">
+                                <h4>Input Validation</h4>
+                                <p>Strict schema validation for all API requests</p>
+                            </div>
+                            <span class="policy-status active">Active</span>
+                        </li>
+                        <li class="policy-item">
+                            <div class="policy-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="policy-content">
+                                <h4>Rate Limiting</h4>
+                                <p>Advanced rate limiting based on client profiles</p>
+                            </div>
+                            <span class="policy-status active">Active</span>
+                        </li>
+                        <li class="policy-item">
+                            <div class="policy-icon">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="policy-content">
+                                <h4>Multi-Factor Authentication</h4>
+                                <p>Mandatory MFA for admin API operations</p>
+                            </div>
+                            <span class="policy-status pending">Pending</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Threat Map Card -->
+                <div class="card threat-map">
+                    <div class="card-header">
+                        <h3>Global Threat Map</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="security-map">
+                        <div class="map-overlay"></div>
+                        <div class="attack-point" style="top: 30%; left: 25%;"></div>
+                        <div class="attack-point" style="top: 35%; left: 80%;"></div>
+                        <div class="attack-point warning" style="top: 75%; left: 65%;"></div>
+                        <div class="attack-point" style="top: 40%; left: 50%;"></div>
+                        <div class="attack-point warning" style="top: 25%; left: 40%;"></div>
+                    </div>
+                </div>
+                
+                <!-- Compliance Report Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Compliance Report</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="compliance-chart">
+                        <div class="chart-container">
+                            <div class="chart-circle">
+                                <div class="chart-inner">
+                                    <div class="chart-value">92%</div>
+                                    <div class="chart-label">PCI DSS</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-circle medium">
+                                <div class="chart-inner">
+                                    <div class="chart-value medium">85%</div>
+                                    <div class="chart-label">GDPR</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-circle low">
+                                <div class="chart-inner">
+                                    <div class="chart-value low">78%</div>
+                                    <div class="chart-label">ISO 27001</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Insights Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>AI Security Insights</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="threat-list">
+                        <li class="threat-item">
+                            <div class="threat-icon info">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>Anomaly Detected</h4>
+                                <p>Unusual access pattern identified for Transaction API</p>
+                            </div>
+                            <div class="threat-time">15m ago</div>
+                        </li>
+                        <li class="threat-item">
+                            <div class="threat-icon info">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>Potential Zero-Day Exploit</h4>
+                                <p>AI detected signature of emerging exploit pattern</p>
+                            </div>
+                            <div class="threat-time">2h ago</div>
+                        </li>
+                        <li class="threat-item">
+                            <div class="threat-icon info">
+                                <i class="fas fa-brain"></i>
+                            </div>
+                            <div class="threat-content">
+                                <h4>Security Posture Prediction</h4>
+                                <p>Customer API vulnerability risk increasing by 18%</p>
+                            </div>
+                            <div class="threat-time">4h ago</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Assistant -->
+    <div class="ai-assistant pulse">
+        <div class="ai-icon">
+            <i class="fas fa-robot"></i>
+        </div>
+        <span>Security Assistant</span>
+    </div>
+</body>
+</html>

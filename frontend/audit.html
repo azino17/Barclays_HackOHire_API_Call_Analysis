@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Audit Logs</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* Audit Logs specific styles */
+        .audit-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .audit-overview {
+            grid-column: span 3;
+        }
+        
+        .audit-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .stat-card.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        /* Filter toolbar */
+        .filter-toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-toolbar select, .filter-toolbar input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .filter-toolbar .date-range {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-toolbar button {
+            padding: 8px 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .filter-toolbar button i {
+            margin-right: 8px;
+        }
+        
+        .filter-toolbar .export-btn {
+            background-color: var(--success);
+            margin-left: auto;
+        }
+        
+        /* Audit logs table */
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .logs-table th, .logs-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logs-table th {
+            background-color: var(--light);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dark);
+        }
+        
+        .logs-table tr:hover {
+            background-color: var(--light);
+        }
+        
+        .logs-table td {
+            font-size: 14px;
+        }
+        
+        .logs-table td.timestamp {
+            color: #666;
+            white-space: nowrap;
+        }
+        
+        .logs-table .action-column {
+            width: 100px;
+            text-align: center;
+        }
+        
+        .logs-table .details-btn {
+            background-color: var(--light);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--dark);
+        }
+        
+        .logs-table .details-btn:hover {
+            background-color: var(--border);
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+            font-weight: 500;
+        }
+        
+        .status-badge.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .status-badge.error {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .status-badge.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-badge.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        /* User activity section */
+        .user-activity-chart {
+            height: 250px;
+            background-color: var(--light);
+            border-radius: 8px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/800/250') no-repeat center center;
+            background-size: cover;
+            opacity: 0.7;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination button {
+            width: 35px;
+            height: 35px;
+            border: 1px solid var(--border);
+            background-color: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .pagination button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .pagination button:hover:not(.active) {
+            background-color: var(--light);
+        }
+        
+        /* Summary panel */
+        .quick-summary {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            flex: 1;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .summary-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+        
+        .summary-icon.access {
+            background-color: var(--primary);
+        }
+        
+        .summary-icon.changes {
+            background-color: var(--warning);
+        }
+        
+        .summary-icon.security {
+            background-color: var(--danger);
+        }
+        
+        .summary-icon.system {
+            background-color: var(--success);
+        }
+        
+        .summary-info h4 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .summary-info span {
+            font-size: 13px;
+            color: #667586;
+        }
+        
+        /* Audit Trail Activities */
+        .activity-list {
+            list-style: none;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .activity-icon.access {
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+        }
+        
+        .activity-icon.change {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .activity-icon.security {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .activity-icon.system {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .activity-content p {
+            font-size: 13px;
+            color: #667586;
+            margin-bottom: 5px;
+        }
+        
+        .activity-metadata {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: #919191;
+        }
+        
+        .activity-metadata span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .activity-metadata i {
+            margin-right: 5px;
+            font-size: 11px;
+        }
+        
+        .activity-time {
+            margin-left: auto;
+            font-size: 12px;
+            color: #919191;
+            flex-shrink: 0;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 1200px) {
+            .audit-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .audit-overview,
+            .recent-activities {
+                grid-column: span 2;
+            }
+            
+            .audit-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .quick-summary {
+                flex-wrap: wrap;
+            }
+            
+            .summary-item {
+                flex: 0 0 calc(50% - 10px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .audit-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .audit-overview,
+            .recent-activities {
+                grid-column: span 1;
+            }
+            
+            .audit-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .summary-item {
+                flex: 0 0 100%;
+            }
+            
+            .filter-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-toolbar .date-range {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .filter-toolbar .export-btn {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i> 
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search audit logs by user, API, or action...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="audit-dashboard">
+                <!-- Audit Overview Card -->
+                <div class="card audit-overview">
+                    <div class="card-header">
+                        <h3>Audit Activity Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="quick-summary">
+                        <div class="summary-item">
+                            <div class="summary-icon access">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h4>1,254</h4>
+                                <span>Authentication Logs</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-icon changes">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h4>428</h4>
+                                <span>Configuration Changes</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-icon security">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h4>85</h4>
+                                <span>Security Events</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-icon system">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="summary-info">
+                                <h4>3,718</h4>
+                                <span>System Activities</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-activity-chart">
+                        <div class="chart-placeholder"></div>
+                    </div>
+                </div>
+                
+                <!-- Filter Toolbar -->
+                <div class="card" style="grid-column: span 3;">
+                    <div class="filter-toolbar">
+                        <select>
+                            <option>All Event Types</option>
+                            <option>Authentication</option>
+                            <option>Configuration</option>
+                            <option>User Action</option>
+                            <option>System Event</option>
+                            <option>Security Alert</option>
+                        </select>
+                        <select>
+                            <option>All Users</option>
+                            <option>Admin Users</option>
+                            <option>System Users</option>
+                            <option>API Users</option>
+                            <option>Service Accounts</option>
+                        </select>
+                        <div class="date-range">
+                            <span>Date Range:</span>
+                            <input type="date" value="2025-03-25">
+                            <span>to</span>
+                            <input type="date" value="2025-04-01">
+                        </div>
+                        <button><i class="fas fa-filter"></i> Apply Filters</button>
+                        <button class="export-btn"><i class="fas fa-download"></i> Export Logs</button>
+                    </div>
+                </div>
+                
+                <!-- Audit Logs Table -->
+                <div class="card" style="grid-column: span 3;">
+                    <div class="card-header">
+                        <h3>Detailed Audit Logs</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Event Type</th>
+                                <th>Resource</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                                <th class="action-column">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="timestamp">2025-04-01 09:45:23</td>
+                                <td>john.smith</td>
+                                <td>Login</td>
+                                <td>Admin Portal</td>
+                                <td>192.168.1.45</td>
+                                <td><span class="status-badge success">Success</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 09:32:18</td>
+                                <td>api_service</td>
+                                <td>API Call</td>
+                                <td>Customer API</td>
+                                <td>10.15.27.3</td>
+                                <td><span class="status-badge success">Success</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 09:28:45</td>
+                                <td>sarah.jones</td>
+                                <td>Permission Change</td>
+                                <td>User Management</td>
+                                <td>192.168.1.67</td>
+                                <td><span class="status-badge success">Success</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 09:15:32</td>
+                                <td>system</td>
+                                <td>Backup</td>
+                                <td>Database</td>
+                                <td>Internal</td>
+                                <td><span class="status-badge success">Success</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 09:12:05</td>
+                                <td>unknown</td>
+                                <td>Login Attempt</td>
+                                <td>Admin Portal</td>
+                                <td>203.45.78.156</td>
+                                <td><span class="status-badge error">Failed</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 09:05:44</td>
+                                <td>david.wilson</td>
+                                <td>API Key Generated</td>
+                                <td>API Management</td>
+                                <td>192.168.1.89</td>
+                                <td><span class="status-badge success">Success</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 08:58:12</td>
+                                <td>james.taylor</td>
+                                <td>Config Change</td>
+                                <td>Security Policy</td>
+                                <td>192.168.1.32</td>
+                                <td><span class="status-badge warning">Warning</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 08:45:30</td>
+                                <td>api_gateway</td>
+                                <td>Rate Limit Exceeded</td>
+                                <td>Payment API</td>
+                                <td>64.23.45.127</td>
+                                <td><span class="status-badge warning">Warning</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 08:32:19</td>
+                                <td>system</td>
+                                <td>Health Check</td>
+                                <td>All Services</td>
+                                <td>Internal</td>
+                                <td><span class="status-badge info">Info</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timestamp">2025-04-01 08:15:27</td>
+                                <td>emma.brown</td>
+                                <td>User Created</td>
+                                <td>User Management</td>
+                                <td>192.168.1.54</td>
+                                <td><span class="status-badge success">Success</span></td>
+                                <td class="action-column">
+                                    <button class="details-btn">Details</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="pagination">
+                        <button><i class="fas fa-angle-double-left"></i></button>
+                        <button><i class="fas fa-angle-left"></i></button>
+                        <button class="active">1</button>
+                        <button>2</button>
+                        <button>3</button>
+                        <button>4</button>
+                        <button>5</button>
+                        <button><i class="fas fa-angle-right"></i></button>
+                        <button><i class="fas fa-angle-double-right"></i></button>
+                    </div>
+                </div>
+                
+                <!-- Notable Audit Activities -->
+                <div class="card recent-activities" style="grid-column: span 3;">
+                    <div class="card-header">
+                        <h3>Notable Audit Activities</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="activity-list">
+                        <li class="activity-item">
+                            <div class="activity-icon security">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>Multiple Failed Login Attempts</h4>
+                                <p>5 consecutive failed login attempts detected for admin account</p>
+                                <div class="activity-metadata">
+                                    <span><i class="fas fa-user"></i> Target: admin</span>
+                                    <span><i class="fas fa-map-marker-alt"></i> IP: 45.67.89.123</span>
+                                </div>
+                            </div>
+                            <div class="activity-time">08:47:23</div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon change">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>API Rate Limit Modified</h4>
+                                <p>Rate limit for Payment API increased from 100 to 150 requests per minute</p>
+                                <div class="activity-metadata">
+                                    <span><i class="fas fa-user"></i> By: james.taylor</span>
+                                    <span><i class="fas fa-map-marker-alt"></i> IP: 192.168.1.32</span>
+                                </div>
+                            </div>
+                            <div class="activity-time">08:33:51</div>
+                        </li>
+                        <li class="activity-item">
+                            <div class="activity-icon access">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>New API Key Generated</h4>
+                                <p>New API key generated for partner "FinTech Solutions Inc."</p>
+                                <div class="activity-metadata">
+                                    <span><i class="fas fa-user"></i> By: david.wilson</span>
+                                    <span><i class="fas fa-map-marker-alt"></i> IP: 192.168.1.89</span>

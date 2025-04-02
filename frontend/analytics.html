@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Analytics</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* Analytics specific styles */
+        .analytics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .analytics-overview {
+            grid-column: span 3;
+        }
+        
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.primary {
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+        }
+        
+        .stat-card.accent {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .stat-card p {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .trend-up {
+            color: var(--success);
+        }
+        
+        .trend-down {
+            color: var(--danger);
+        }
+        
+        /* Chart containers */
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            position: relative;
+        }
+        
+        .chart-placeholder {
+            width: 100%;
+            height: 100%;
+            background-color: var(--light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text);
+        }
+        
+        /* API Usage Table */
+        .api-usage-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .api-usage-table th,
+        .api-usage-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .api-usage-table th {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+        
+        .api-usage-table td {
+            font-size: 14px;
+        }
+        
+        .api-usage-table tbody tr:hover {
+            background-color: var(--light);
+        }
+        
+        .api-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        .api-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background-color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 10px;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.healthy {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .status-badge.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-badge.degraded {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        /* Time Period filter */
+        .time-filter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .time-filter label {
+            margin-right: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .time-filter select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        /* Detail metrics */
+        .detail-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .metric-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 3px;
+            color: #667586;
+        }
+        
+        .metric-content p {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        /* Progress bars */
+        .progress-container {
+            margin-top: 15px;
+        }
+        
+        .progress-item {
+            margin-bottom: 15px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .progress-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .progress-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            width: 100%;
+            background-color: var(--light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .progress-fill.primary {
+            background-color: var(--primary);
+        }
+        
+        .progress-fill.success {
+            background-color: var(--success);
+        }
+        
+        .progress-fill.accent {
+            background-color: var(--accent);
+        }
+        
+        .progress-fill.warning {
+            background-color: var(--warning);
+        }
+        
+        /* Heat map */
+        .heatmap-container {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 4px;
+            height: 200px;
+            margin-top: 20px;
+        }
+        
+        .heatmap-cell {
+            border-radius: 2px;
+            transition: transform 0.2s;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+        }
+        
+        .heatmap-legend {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .heatmap-label {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .heatmap-gradient {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            background: linear-gradient(to right, #e0f7fa, #00b8d4, #006064);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .analytics-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .analytics-overview {
+                grid-column: span 2;
+            }
+            
+            .overview-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .detail-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .analytics-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .analytics-overview {
+                grid-column: span 1;
+            }
+            
+            .overview-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i> 
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search APIs, endpoints, or metrics...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="time-filter">
+                <label>Time Period:</label>
+                <select>
+                    <option>Last 24 Hours</option>
+                    <option>Last 7 Days</option>
+                    <option>Last 30 Days</option>
+                    <option>Last Quarter</option>
+                    <option>Custom Range</option>
+                </select>
+            </div>
+            
+            <div class="analytics-dashboard">
+                <!-- Analytics Overview Card -->
+                <div class="card analytics-overview">
+                    <div class="card-header">
+                        <h3>API Performance Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="overview-stats">
+                        <div class="stat-card primary">
+                            <span>Total API Calls</span>
+                            <h4>5.2M</h4>
+                            <p><i class="fas fa-arrow-up"></i> <span class="trend-up">12.5%</span> from last month</p>
+                        </div>
+                        <div class="stat-card accent">
+                            <span>Avg. Response Time</span>
+                            <h4>78ms</h4>
+                            <p><i class="fas fa-arrow-down"></i> <span class="trend-up">8.3%</span> from last month</p>
+                        </div>
+                        <div class="stat-card success">
+                            <span>Success Rate</span>
+                            <h4>99.2%</h4>
+                            <p><i class="fas fa-arrow-up"></i> <span class="trend-up">0.7%</span> from last month</p>
+                        </div>
+                        <div class="stat-card warning">
+                            <span>Error Rate</span>
+                            <h4>0.8%</h4>
+                            <p><i class="fas fa-arrow-down"></i> <span class="trend-up">0.3%</span> from last month</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Traffic Trends Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Traffic Trends</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <p>API Calls Volume Over Time Chart</p>
+                        </div>
+                    </div>
+                    <div class="detail-metrics">
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Peak Traffic</h4>
+                                <p>352,841 calls</p>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Active Clients</h4>
+                                <p>846</p>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Busiest Hour</h4>
+                                <p>14:00 - 15:00</p>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Busiest Day</h4>
+                                <p>Wednesday</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top APIs by Usage Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Top APIs by Usage</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Payments API</span>
+                                <span class="progress-value">1,247,558 calls</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill primary" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Accounts API</span>
+                                <span class="progress-value">984,372 calls</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill accent" style="width: 67%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Authentication API</span>
+                                <span class="progress-value">872,490 calls</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill success" style="width: 60%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Customer Data API</span>
+                                <span class="progress-value">643,825 calls</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill warning" style="width: 44%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Transaction History API</span>
+                                <span class="progress-value">542,318 calls</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill primary" style="width: 37%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Response Time Analysis Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Response Time Analysis</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <p>Response Time Distribution Chart</p>
+                        </div>
+                    </div>
+                    <div class="detail-metrics">
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Fastest API</h4>
+                                <p>Auth Token (32ms)</p>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Slowest API</h4>
+                                <p>Transaction History (187ms)</p>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>P95 Response</h4>
+                                <p>125ms</p>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="metric-content">
+                                <h4>Timeout Rate</h4>
+                                <p>0.04%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Health Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Health Status</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <table class="api-usage-table">
+                        <thead>
+                            <tr>
+                                <th>API</th>
+                                <th>Status</th>
+                                <th>Uptime</th>
+                                <th>Avg Response</th>
+                                <th>Errors (24h)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="api-name">
+                                        <div class="api-icon"><i class="fas fa-credit-card"></i></div>
+                                        <span>Payments API</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge healthy">Healthy</span></td>
+                                <td>99.99%</td>
+                                <td>92ms</td>
+                                <td>12</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="api-name">
+                                        <div class="api-icon"><i class="fas fa-university"></i></div>
+                                        <span>Accounts API</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge healthy">Healthy</span></td>
+                                <td>99.95%</td>
+                                <td>84ms</td>
+                                <td>37</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="api-name">
+                                        <div class="api-icon"><i class="fas fa-key"></i></div>
+                                        <span>Authentication API</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge healthy">Healthy</span></td>
+                                <td>100%</td>
+                                <td>32ms</td>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="api-name">
+                                        <div class="api-icon"><i class="fas fa-users"></i></div>
+                                        <span>Customer Data API</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge warning">Degrading</span></td>
+                                <td>99.87%</td>
+                                <td>124ms</td>
+                                <td>68</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="api-name">
+                                        <div class="api-icon"><i class="fas fa-history"></i></div>
+                                        <span>Transaction History API</span>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge degraded">Degraded</span></td>
+                                <td>99.72%</td>
+                                <td>187ms</td>
+                                <td>143</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Error Analysis Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Error Analysis</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-placeholder">
+                            <p>Error Distribution by Type and API Chart</p>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Authentication Errors</span>
+                                <span class="progress-value">102 occurrences</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill danger" style="width: 32%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Rate Limiting</span>
+                                <span class="progress-value">87 occurrences</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill warning" style="width: 28%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Validation Errors</span>
+                                <span class="progress-value">64 occurrences</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill danger" style="width: 20%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Client Usage Patterns Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Client Usage Patterns</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="heatmap-container">
+                        <!-- Generate heatmap cells with different opacity based on usage -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const heatmapContainer = document.querySelector('.heatmap-container');
+                                const days = 7;
+                                const hours = 24;
+                                
+                                for (let d = 0; d < days; d++) {
+                                    for (let h = 0; h < hours; h++) {
+                                        const intensity = Math.random();
+                                        const cell = document.createElement('div');
+                                        cell.className = 'heatmap-cell';
+                                        cell.style.backgroundColor = `rgba(0, 184, 212, ${intensity})`;
+                                        heatmapContainer.appendChild(cell);
+                                    }
+                                }
+                            });
+                        </script>
+                    </div>
+                    <div class="heatmap-legend">
+                        <span class="heatmap-label">Low Activity

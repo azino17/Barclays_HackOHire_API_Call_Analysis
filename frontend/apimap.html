@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - API Map</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* API Map specific styles */
+        .api-map-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .api-overview {
+            grid-column: span 3;
+        }
+        
+        .api-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.primary {
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+        }
+        
+        .stat-card.secondary {
+            background: rgba(0, 57, 93, 0.1);
+            color: var(--secondary);
+        }
+        
+        .stat-card.accent {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        /* API Visualization */
+        .api-visualization {
+            grid-column: span 2;
+            height: 400px;
+            position: relative;
+        }
+        
+        .api-map-container {
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .api-node {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            z-index: 2;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .api-node:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .api-node.payments {
+            background: var(--primary);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .api-node.accounts {
+            background: var(--accent);
+            top: 30%;
+            left: 30%;
+        }
+        
+        .api-node.customers {
+            background: var(--success);
+            top: 70%;
+            left: 25%;
+        }
+        
+        .api-node.transactions {
+            background: var(--warning);
+            top: 40%;
+            left: 75%;
+        }
+        
+        .api-node.auth {
+            background: var(--secondary);
+            top: 20%;
+            left: 60%;
+        }
+        
+        .api-node.products {
+            background: #9c27b0;
+            top: 75%;
+            left: 60%;
+        }
+        
+        .api-connection {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            transform-origin: 0 0;
+        }
+        
+        /* API List */
+        .api-list {
+            list-style: none;
+        }
+        
+        .api-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        
+        .api-item:last-child {
+            border-bottom: none;
+        }
+        
+        .api-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            color: white;
+        }
+        
+        .api-icon.payments {
+            background: var(--primary);
+        }
+        
+        .api-icon.accounts {
+            background: var(--accent);
+        }
+        
+        .api-icon.customers {
+            background: var(--success);
+        }
+        
+        .api-icon.transactions {
+            background: var(--warning);
+        }
+        
+        .api-icon.auth {
+            background: var(--secondary);
+        }
+        
+        .api-icon.products {
+            background: #9c27b0;
+        }
+        
+        .api-content {
+            flex: 1;
+        }
+        
+        .api-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .api-badge {
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .api-badge.v1 {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .api-badge.v2 {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .api-badge.beta {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .api-badge.deprecated {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .api-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .api-stats-small {
+            display: flex;
+            margin-top: 5px;
+        }
+        
+        .api-stat {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .api-stat i {
+            margin-right: 5px;
+            font-size: 10px;
+        }
+        
+        /* API Dependencies */
+        .dependency-list {
+            list-style: none;
+        }
+        
+        .dependency-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .dependency-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dependency-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        
+        .dependency-content {
+            flex: 1;
+        }
+        
+        .dependency-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        
+        .dependency-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .dependency-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .dependency-status.healthy {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .dependency-status.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .dependency-status.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        /* API Traffic Chart */
+        .traffic-chart {
+            height: 200px;
+            background: url('/api/placeholder/800/200') no-repeat center center;
+            background-size: cover;
+            margin-top: 15px;
+            border-radius: 6px;
+            opacity: 0.8;
+        }
+        
+        /* API Health Checklist */
+        .health-check-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .health-check-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: var(--light);
+            border-radius: 4px;
+        }
+        
+        .health-icon {
+            margin-right: 10px;
+        }
+        
+        .health-icon.pass {
+            color: var(--success);
+        }
+        
+        .health-icon.fail {
+            color: var(--danger);
+        }
+        
+        .health-content {
+            font-size: 12px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .api-map-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .api-overview {
+                grid-column: span 2;
+            }
+            
+            .api-visualization {
+                grid-column: span 2;
+            }
+            
+            .api-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .api-map-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .api-overview,
+            .api-visualization {
+                grid-column: span 1;
+            }
+            
+            .api-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .health-check-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i> 
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search APIs, endpoints, dependencies...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="api-map-dashboard">
+                <!-- API Overview Card -->
+                <div class="card api-overview">
+                    <div class="card-header">
+                        <h3>API Infrastructure Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="api-stats">
+                        <div class="stat-card primary">
+                            <span>Total APIs</span>
+                            <h4>42</h4>
+                        </div>
+                        <div class="stat-card accent">
+                            <span>Endpoints</span>
+                            <h4>248</h4>
+                        </div>
+                        <div class="stat-card success">
+                            <span>Healthy APIs</span>
+                            <h4>97%</h4>
+                        </div>
+                        <div class="stat-card secondary">
+                            <span>Daily Requests</span>
+                            <h4>9.4M</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API Visualization Card -->
+                <div class="card api-visualization">
+                    <div class="card-header">
+                        <h3>API Relationship Map</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="api-map-container">
+                        <!-- API Nodes -->
+                        <div class="api-node payments">Payments API</div>
+                        <div class="api-node accounts">Accounts API</div>
+                        <div class="api-node customers">Customers API</div>
+                        <div class="api-node transactions">Transactions API</div>
+                        <div class="api-node auth">Auth API</div>
+                        <div class="api-node products">Products API</div>
+                        
+                        <!-- Connections would be drawn with JavaScript in a real implementation -->
+                        <div class="api-connection" style="width: 2px; height: 120px; top: 50%; left: 50%; transform: rotate(45deg); transform-origin: 0 0;"></div>
+                        <div class="api-connection" style="width: 2px; height: 150px; top: 50%; left: 50%; transform: rotate(-30deg); transform-origin: 0 0;"></div>
+                        <div class="api-connection" style="width: 2px; height: 100px; top: 50%; left: 50%; transform: rotate(120deg); transform-origin: 0 0;"></div>
+                        <div class="api-connection" style="width: 2px; height: 90px; top: 50%; left: 50%; transform: rotate(190deg); transform-origin: 0 0;"></div>
+                        <div class="api-connection" style="width: 2px; height: 160px; top: 50%; left: 50%; transform: rotate(240deg); transform-origin: 0 0;"></div>
+                        <div class="api-connection" style="width: 2px; height: 140px; top: 30%; left: 30%; transform: rotate(70deg); transform-origin: 0 0;"></div>
+                    </div>
+                </div>
+                
+                <!-- API Dependencies Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Dependencies</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="dependency-list">
+                        <li class="dependency-item">
+                            <div class="dependency-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="dependency-content">
+                                <h4>Core Banking System</h4>
+                                <p>Primary data source for account information</p>
+                            </div>
+                            <span class="dependency-status healthy">Healthy</span>
+                        </li>
+                        <li class="dependency-item">
+                            <div class="dependency-icon">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <div class="dependency-content">
+                                <h4>Identity Provider</h4>
+                                <p>OAuth and authentication services</p>
+                            </div>
+                            <span class="dependency-status healthy">Healthy</span>
+                        </li>
+                        <li class="dependency-item">
+                            <div class="dependency-icon">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="dependency-content">
+                                <h4>Payment Gateway</h4>
+                                <p>External payment processing service</p>
+                            </div>
+                            <span class="dependency-status warning">Degraded</span>
+                        </li>
+                        <li class="dependency-item">
+                            <div class="dependency-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="dependency-content">
+                                <h4>FX Service</h4>
+                                <p>Real-time currency exchange rates</p>
+                            </div>
+                            <span class="dependency-status healthy">Healthy</span>
+                        </li>
+                        <li class="dependency-item">
+                            <div class="dependency-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="dependency-content">
+                                <h4>Statement Generation</h4>
+                                <p>PDF and document generation service</p>
+                            </div>
+                            <span class="dependency-status critical">Outage</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- API List Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Core API Inventory</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="api-list">
+                        <li class="api-item">
+                            <div class="api-icon payments">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="api-content">
+                                <h4>Payments API <span class="api-badge v2">v2</span></h4>
+                                <p>Process payments, transfers, and scheduled transactions</p>
+                                <div class="api-stats-small">
+                                    <div class="api-stat"><i class="fas fa-circle"></i> 99.98% Uptime</div>
+                                    <div class="api-stat"><i class="fas fa-bolt"></i> 3.2M Requests/day</div>
+                                    <div class="api-stat"><i class="fas fa-clock"></i> 85ms Avg. Latency</div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="api-item">
+                            <div class="api-icon accounts">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="api-content">
+                                <h4>Accounts API <span class="api-badge v2">v2</span></h4>
+                                <p>Account management, balances, and transaction history</p>
+                                <div class="api-stats-small">
+                                    <div class="api-stat"><i class="fas fa-circle"></i> 99.97% Uptime</div>
+                                    <div class="api-stat"><i class="fas fa-bolt"></i> 2.8M Requests/day</div>
+                                    <div class="api-stat"><i class="fas fa-clock"></i> 72ms Avg. Latency</div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="api-item">
+                            <div class="api-icon customers">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="api-content">
+                                <h4>Customers API <span class="api-badge v2">v2</span></h4>
+                                <p>Customer profiles, KYC, and relationship management</p>
+                                <div class="api-stats-small">
+                                    <div class="api-stat"><i class="fas fa-circle"></i> 99.99% Uptime</div>
+                                    <div class="api-stat"><i class="fas fa-bolt"></i> 1.5M Requests/day</div>
+                                    <div class="api-stat"><i class="fas fa-clock"></i> 63ms Avg. Latency</div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="api-item">
+                            <div class="api-icon transactions">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="api-content">
+                                <h4>Transactions API <span class="api-badge beta">Beta</span></h4>
+                                <p>Enhanced transaction analytics and categorization</p>
+                                <div class="api-stats-small">
+                                    <div class="api-stat"><i class="fas fa-circle"></i> 99.85% Uptime</div>
+                                    <div class="api-stat"><i class="fas fa-bolt"></i> 950K Requests/day</div>
+                                    <div class="api-stat"><i class="fas fa-clock"></i> 95ms Avg. Latency</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- API Traffic Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Traffic Trends</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="traffic-chart"></div>
+                </div>
+                
+                <!-- API Health Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Health Monitor</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="health-check-list">
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Authentication Services
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Account Retrieval
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Payment Processing
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon fail">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Statement Generator
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                KYC Verification
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Transaction Search
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Card Management
+                            </div>
+                        </div>
+                        <div class="health-check-item">
+                            <div class="health-icon pass">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="health-content">
+                                Notification Services
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deprecated APIs Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Lifecycle Management</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="api-list">
+                        <li class="api-item">
+                            <div class="api-icon payments" style="opacity: 0.5;">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="api-content">
+                                <h4>Payments API <span class="api-badge deprecated">v1 Deprecated</span></h4>
+                                <p>Legacy payments API - scheduled for sunset on 30/06/2025

@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Enterprise Monitoring Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto;
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-card.danger {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .stat-card.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        /* Feature Cards */
+        .feature-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 6px;
+            background: white;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .feature-card:hover {
+            background: rgba(0, 102, 179, 0.05);
+        }
+        
+        .feature-card i {
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        
+        .feature-card-content h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .feature-card-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        /* Chart wrapper */
+        .chart-wrapper {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0, 102, 179, 0.1) 0%, rgba(0, 102, 179, 0) 100%);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200"><path d="M0,100 C200,10 400,180 600,70 C800,10 1000,130 1200,60 L1200,200 L0,200 Z" /></svg>');
+            mask-size: cover;
+            opacity: 0.8;
+        }
+        
+        /* API Health & Status */
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .health-item {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .health-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-indicator.healthy {
+            background: var(--success);
+        }
+        
+        .status-indicator.warning {
+            background: var(--warning);
+        }
+        
+        .status-indicator.critical {
+            background: var(--danger);
+        }
+        
+        .health-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .health-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        /* Grid layout adjustments */
+        .span-2 {
+            grid-column: span 2;
+        }
+        
+        .span-4 {
+            grid-column: span 4;
+        }
+        
+        /* Alerts */
+        .alert-list {
+            list-style: none;
+        }
+        
+        .alert-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .alert-icon.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .alert-icon.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .alert-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .alert-time {
+            font-size: 12px;
+            color: #919191;
+            flex-shrink: 0;
+        }
+        
+        /* Maps and Environment Visualization */
+        .environment-map {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 102, 179, 0.03);
+            border-radius: 8px;
+            position: relative;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .env-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 10px;
+        }
+        
+        .env-title {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .env-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .env-icon i {
+            font-size: 22px;
+            color: var(--primary);
+        }
+        
+        .env-connection {
+            flex: 0 0 10px;
+            position: relative;
+        }
+        
+        .connection-line {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+        }
+        
+        .api-dots {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 150px;
+            margin: 0 auto;
+        }
+        
+        .api-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 3px;
+            background: var(--success);
+        }
+        
+        .api-dot.warning {
+            background: var(--warning);
+        }
+        
+        .api-dot.danger {
+            background: var(--danger);
+        }
+        
+        /* Badge */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-blue {
+            background: rgba(0, 102, 179, 0.1);
+            color: var(--primary);
+        }
+        
+        .badge-green {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .badge-yellow {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .badge-red {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        /* AI Assistant Bar */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .ai-assistant:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .ai-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 10px;
+        }
+        
+        .ai-assistant span {
+            font-weight: 500;
+        }
+        
+        /* Pulse Animation */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 102, 179, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 102, 179, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 102, 179, 0);
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .span-2, .span-4 {
+                grid-column: span 2;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .span-2, .span-4 {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i> 
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search APIs, alerts, or errors...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="dashboard">
+                <!-- System Health Overview Card -->
+                <div class="card span-2">
+                    <div class="card-header">
+                        <h3>System Health Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="stats">
+                        <div class="stat-card success">
+                            <span>Healthy APIs</span>
+                            <h4>286</h4>
+                        </div>
+                        <div class="stat-card warning">
+                            <span>Warning APIs</span>
+                            <h4>14</h4>
+                        </div>
+                        <div class="stat-card danger">
+                            <span>Critical APIs</span>
+                            <h4>3</h4>
+                        </div>
+                        <div class="stat-card info">
+                            <span>Self-Healed</span>
+                            <h4>7</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Detection Card -->
+                <div class="card span-2">
+                    <div class="card-header">
+                        <h3>AI Predictive Insights</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="feature-card-content">
+                            <h4>Payment API Failure Predicted</h4>
+                            <p>Potential error rate increase in ~10 minutes based on pattern analysis</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <div class="feature-card-content">
+                            <h4>Security Threat Detected</h4>
+                            <p>Suspicious requests to Authentication API from unknown IP addresses</p>
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-tools"></i>
+                        <div class="feature-card-content">
+                            <h4>Auto-Healing Activated</h4>
+                            <p>Transaction API instances auto-scaled to handle increased load</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Response Time Trend Card -->
+                <div class="card span-4">
+                    <div class="card-header">
+                        <h3>API Response Time Trend</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div class="chart"></div>
+                    </div>
+                </div>
+                
+                <!-- Environment Map -->
+                <div class="card span-4">
+                    <div class="card-header">
+                        <h3>Cross-Environment API Map</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="environment-map">
+                        <div class="env-group">
+                            <div class="env-title">On-Premises</div>
+                            <div class="env-icon">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="api-dots">
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot warning"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                            </div>
+                        </div>
+                        <div class="env-connection">
+                            <div class="connection-line"></div>
+                        </div>
+                        <div class="env-group">
+                            <div class="env-title">AWS Cloud</div>
+                            <div class="env-icon">
+                                <i class="fab fa-aws"></i>
+                            </div>
+                            <div class="api-dots">
+                                <div class="api-dot"></div>
+                                <div class="api-dot warning"></div>
+                                <div class="api-dot danger"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                            </div>
+                        </div>
+                        <div class="env-connection">
+                            <div class="connection-line"></div>
+                        </div>
+                        <div class="env-group">
+                            <div class="env-title">Azure Cloud</div>
+                            <div class="env-icon">
+                                <i class="fab fa-microsoft"></i>
+                            </div>
+                            <div class="api-dots">
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot"></div>
+                                <div class="api-dot warning"></div>
+                                <div class="api-dot danger"></div>
+                                <div class="api-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Critical API Health Card -->
+                <div class="card span-2">
+                    <div class="card-header">
+                        <h3>Critical API Health</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="health-grid">
+                        <div class="health-item">
+                            <div class="health-status">
+                                <div class="status-indicator critical"></div>
+                                <div class="health-name">Payment Gateway</div>
+                            </div>
+                            <div class="health-metrics">
+                                <span>Response: 1420ms</span>
+                                <span>Error: 5.2%</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status">
+                                <div class="status-indicator warning"></div>
+                                <div class="health-name">Auth Service</div>
+                            </div>
+                            <div class="health-metrics">
+                                <span>Response: 820ms</span>
+                                <span>Error: 2.1%</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status">
+                                <div class="status-indicator warning"></div>
+                                <div class="health-name">Transaction API</div>
+                            </div>
+                            <div class="health-metrics">
+                                <span>Response: 750ms</span>
+                                <span>Error: 1.8%</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status">
+                                <div class="status-indicator critical"></div>
+                                <div class="health-name">Customer Data</div>
+                            </div>
+                            <div class="health-metrics">
+                                <span>Response: 1250ms</span>
+                                <span>Error: 4.7%</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status">
+                                <div class="status-indicator warning"></div>
+                                <div class="health-name">Account API</div>
+                            </div>
+                            <div class="health-metrics">
+                                <span>Response: 680ms</span>
+                                <span>Error: 1.5%</span>
+                            </div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-status">
+                                <div class="status-indicator healthy"></div>
+                                <div class="health-name">Analytics API</div>
+                            </div>
+                            <div class="health-metrics">
+                                <span>Response: 320ms</span>
+                                <span>Error: 0.2%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Latest Alerts Card -->
+                <div class="card span-2">
+                    <div class="card-header">
+                        <h3>Latest AI-Detected Alerts</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="alert-list">
+                        <li class="alert-item">
+                            <div class="alert-icon critical">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Payment Gateway API Failure</h4>
+                                <p>Database connection timeout at 14:32:45</p>
+                            </div>
+                            <div class="alert-time">12m ago</div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Auth Service Slow Response</h4>
+                                <p>95th percentile response time exceeding threshold</p>
+                            </div>
+                            <div class="alert-time">25m ago</div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon critical">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Possible SQL Injection Attempt</h4>
+                                <p>Multiple malformed requests detected on Customer API</p>
+                            </div>
+                            <div class="alert-time">43m ago</div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Memory Utilization Warning</h4>
+                                <p>Transaction Service instance nearing 85% memory usage</p>
+                            </div>
+                            <div class="alert-time">58m ago</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Top 3 AI Features Showcase -->
+                <div class="card span-4">
+                    <div class="card-header">
+                        <h3>AI-Powered Guardian Features</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div style="background: linear-gradient(145deg, #0066b3, #00395d); border-radius: 8px; padding: 20px; color: white;">
+                            <i class="fas fa-tools" style="font-size: 24px; margin-bottom: 15px;"></i>
+                            <h4 style="margin-bottom: 10px; font-size: 16px;">AI-Powered Auto-Healing</h4>
+                            <p style="font-size: 13px; opacity: 0.9;">Automatically detects and fixes API failures with rollbacks, auto-scaling, and intelligent traffic routing.</p>
+                            <div style="margin-top: 15px;">
+                                <span class="badge" style

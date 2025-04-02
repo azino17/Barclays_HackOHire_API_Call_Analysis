@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Alerts</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+            --info: #0065ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* Alerts Dashboard */
+        .alerts-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .alerts-overview {
+            grid-column: span 3;
+        }
+        
+        .alerts-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .stat-card.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        /* Alert List Styling */
+        .alert-list {
+            list-style: none;
+        }
+        
+        .alert-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+        
+        .alert-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .alert-icon.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .alert-icon.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .alert-icon.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .alert-icon.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-badge {
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .alert-badge.critical {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .alert-badge.warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .alert-badge.info {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .alert-badge.success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .alert-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .alert-time {
+            font-size: 12px;
+            color: #919191;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        
+        .alert-actions {
+            display: flex;
+            margin-left: 10px;
+        }
+        
+        .alert-actions button {
+            background: none;
+            border: none;
+            color: #919191;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 5px;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .alert-actions button:hover {
+            color: var(--primary);
+        }
+        
+        /* Alert Filter Bar */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .filter-btn i {
+            margin-right: 5px;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .filter-btn:hover {
+            background: var(--light);
+        }
+        
+        .filter-btn.active:hover {
+            background: var(--primary);
+            opacity: 0.9;
+        }
+        
+        /* Alert Settings */
+        .alert-settings-form {
+            padding: 10px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-group .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .checkbox-item input {
+            width: auto;
+            margin-right: 5px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        /* Alert Trends Chart */
+        .alerts-chart {
+            height: 300px;
+            position: relative;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .chart-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/api/placeholder/800/300') no-repeat center center;
+            background-size: cover;
+            opacity: 0.7;
+        }
+        
+        .alert-integrations {
+            margin-top: 20px;
+        }
+        
+        .integration-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .integration-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .integration-item:hover {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .integration-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--primary);
+            font-size: 18px;
+        }
+        
+        .integration-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        
+        .integration-info p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-left: auto;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .page-item {
+            margin: 0 5px;
+        }
+        
+        .page-link {
+            display: block;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .page-link:hover {
+            background: var(--light);
+        }
+        
+        .page-item.active .page-link {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 102, 179, 0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .ai-assistant:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 102, 179, 0.4);
+        }
+        
+        .ai-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+        
+        @keyframes pulse-animation {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 102, 179, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(0, 102, 179, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 102, 179, 0);
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .alerts-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .alerts-overview {
+                grid-column: span 2;
+            }
+            
+            .alerts-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .integration-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .alerts-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .alerts-overview {
+                grid-column: span 1;
+            }
+            
+            .alerts-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .filter-group {
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+            }
+            
+            .filter-btn {
+                margin-bottom: 5px;
+            }
+            
+            .integration-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-bell"></i>
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search for alerts, API issues, or incidents...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="alerts-dashboard">
+                <!-- Alerts Overview Card -->
+                <div class="card alerts-overview">
+                    <div class="card-header">
+                        <h3>Alert Center Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="alerts-stats">
+                        <div class="stat-card critical">
+                            <span>Critical Alerts</span>
+                            <h4>7</h4>
+                        </div>
+                        <div class="stat-card warning">
+                            <span>Warning Alerts</span>
+                            <h4>16</h4>
+                        </div>
+                        <div class="stat-card info">
+                            <span>Info Alerts</span>
+                            <h4>28</h4>
+                        </div>
+                        <div class="stat-card success">
+                            <span>Resolved Today</span>
+                            <h4>23</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Active Alerts Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Active Alerts</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <button class="filter-btn active"><i class="fas fa-filter"></i> All</button>
+                            <button class="filter-btn"><i class="fas fa-exclamation-circle"></i> Critical</button>
+                            <button class="filter-btn"><i class="fas fa-exclamation-triangle"></i> Warning</button>
+                            <button class="filter-btn"><i class="fas fa-info-circle"></i> Information</button>
+                        </div>
+                        <div class="filter-group">
+                            <button class="filter-btn"><i class="fas fa-sort"></i> Sort</button>
+                            <button class="filter-btn"><i class="fas fa-calendar-alt"></i> Date Range</button>
+                        </div>
+                    </div>
+                    
+                    <ul class="alert-list">
+                        <li class="alert-item">
+                            <div class="alert-icon critical">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Payment Gateway Critical Error <span class="alert-badge critical">Critical</span></h4>
+                                <p>Payment processing failed for multiple transactions. Error rate exceeds 15% threshold.</p>
+                            </div>
+                            <div class="alert-time">5m ago</div>
+                            <div class="alert-actions">
+                                <button title="Acknowledge"><i class="fas fa-check"></i></button>
+                                <button title="Assign"><i class="fas fa-user-plus"></i></button>
+                                <button title="More actions"><i class="fas fa-ellipsis-v"></i></button>
+                            </div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon critical">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>High Latency on Account API <span class="alert-badge critical">Critical</span></h4>
+                                <p>Response time exceeds 2000ms for 85% of requests in EU region</p>
+                            </div>
+                            <div class="alert-time">12m ago</div>
+                            <div class="alert-actions">
+                                <button title="Acknowledge"><i class="fas fa-check"></i></button>
+                                <button title="Assign"><i class="fas fa-user-plus"></i></button>
+                                <button title="More actions"><i class="fas fa-ellipsis-v"></i></button>
+                            </div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Elevated 401 Responses <span class="alert-badge warning">Warning</span></h4>
+                                <p>Increase in authentication failures on Customer Authentication API</p>
+                            </div>
+                            <div class="alert-time">36m ago</div>
+                            <div class="alert-actions">
+                                <button title="Acknowledge"><i class="fas fa-check"></i></button>
+                                <button title="Assign"><i class="fas fa-user-plus"></i></button>
+                                <button title="More actions"><i class="fas fa-ellipsis-v"></i></button>
+                            </div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon info">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>API Usage Spike <span class="alert-badge info">Info</span></h4>
+                                <p>Transaction API usage is 65% above normal for this time period</p>
+                            </div>
+                            <div class="alert-time">53m ago</div>
+                            <div class="alert-actions">
+                                <button title="Acknowledge"><i class="fas fa-check"></i></button>
+                                <button title="Assign"><i class="fas fa-user-plus"></i></button>
+                                <button title="More actions"><i class="fas fa-ellipsis-v"></i></button>
+                            </div>
+                        </li>
+                        <li class="alert-item">
+                            <div class="alert-icon warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <h4>Certificate Expiration <span class="alert-badge warning">Warning</span></h4>
+                                <p>API Gateway SSL certificate will expire in 15 days</p>
+                            </div>
+                            <div class="alert-time">1h ago</div>
+                            <div class="alert-actions">
+                                <button title="Acknowledge"><i class="fas fa-check"></i></button>
+                                <button title="Assign"><i class="fas fa-user-plus"></i></button>
+                                <button title="More actions"><i class="fas fa-ellipsis-v"></i></button>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <div class="pagination">
+                        <div class="page-item">
+                            <a href="#" class="page-link"><i class="fas fa-chevron-left"></i></a>
+                        </div>
+                        <div class="page-item active">
+                            <a href="#" class="page-link">1</a>
+                        </div>
+                        <div class="page-item">
+                            <a href="#" class="page-link">2</a>
+                        </div>
+                        <div class="page-item">
+                            <a href="#" class="page-link">3</a>
+                        </div>
+                        <div class="page-item">
+                            <a href="#" class="page-link"><i class="fas fa-chevron-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alert Settings Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Alert Settings</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="alert-settings-form">
+                        <div class="form-group">
+                            <label>Notification Channels</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="email" checked>
+                                    <label for="email">Email</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="sms" checked>
+                                    <label for="sms">SMS</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="slack" checked>
+                                    <label for="slack">Slack</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="teams">
+                                    <label for="teams">Teams</label>
+                                </div>
+                                <div class="checkbox-item

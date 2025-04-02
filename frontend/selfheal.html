@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Self-Healing</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* Self-Healing specific styles */
+        .self-healing-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .healing-overview {
+            grid-column: span 3;
+        }
+        
+        .healing-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 15px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-card.critical {
+            background: rgba(255, 86, 48, 0.1);
+            color: var(--danger);
+        }
+        
+        .stat-card.warning {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .stat-card.success {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .stat-card.info {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-card span {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card h4 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .healing-list {
+            list-style: none;
+        }
+        
+        .healing-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        
+        .healing-item:last-child {
+            border-bottom: none;
+        }
+        
+        .healing-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .healing-icon.automated {
+            background: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .healing-icon.manual {
+            background: rgba(255, 171, 0, 0.1);
+            color: var(--warning);
+        }
+        
+        .healing-icon.planned {
+            background: rgba(0, 160, 223, 0.1);
+            color: var(--accent);
+        }
+        
+        .healing-content {
+            flex: 1;
+        }
+        
+        .healing-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .healing-badge {
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .healing-badge.automated {
+            background: var(--success);
+            color: white;
+        }
+        
+        .healing-badge.manual {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .healing-badge.planned {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .healing-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .healing-time {
+            font-size: 12px;
+            color: #919191;
+            flex-shrink: 0;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-fill.automated {
+            background-color: var(--success);
+        }
+        
+        .progress-fill.manual {
+            background-color: var(--warning);
+        }
+        
+        .progress-fill.planned {
+            background-color: var(--accent);
+        }
+        
+        .progress-fill.critical {
+            background-color: var(--danger);
+        }
+        
+        .api-health-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .api-health-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+        
+        .api-health-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .api-health-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .api-health-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .api-health-status.healthy {
+            background-color: var(--success);
+        }
+        
+        .api-health-status.degraded {
+            background-color: var(--warning);
+        }
+        
+        .api-health-status.failing {
+            background-color: var(--danger);
+        }
+        
+        .api-health-status.healing {
+            background-color: var(--accent);
+            animation: pulse-blue 2s infinite;
+        }
+        
+        @keyframes pulse-blue {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 160, 223, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 160, 223, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 160, 223, 0);
+            }
+        }
+        
+        .api-health-metrics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .api-metric {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .api-metric span {
+            display: block;
+            font-size: 10px;
+            color: #667586;
+            margin-bottom: 2px;
+        }
+        
+        .api-metric strong {
+            font-size: 14px;
+            color: var(--text);
+        }
+        
+        .healing-timeline {
+            padding: 0 10px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            padding-bottom: 20px;
+            border-left: 2px solid var(--border);
+        }
+        
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -10px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 10px;
+        }
+        
+        .timeline-content {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            margin-left: 15px;
+        }
+        
+        .timeline-content h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .timeline-content p {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .timeline-time {
+            font-size: 11px;
+            color: #919191;
+            margin-top: 5px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-btn.primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .action-btn.secondary {
+            background-color: #f0f0f0;
+            color: var(--text);
+        }
+        
+        .rule-list {
+            margin-top: 10px;
+        }
+        
+        .rule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+        }
+        
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+        
+        .rule-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .rule-toggle {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .rule-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .rule-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        
+        .rule-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .rule-slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .rule-slider:before {
+            transform: translateX(20px);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .self-healing-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .healing-overview {
+                grid-column: span 2;
+            }
+            
+            .healing-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .api-health-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .self-healing-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .healing-overview {
+                grid-column: span 1;
+            }
+            
+            .healing-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .api-health-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i> 
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-cog"></i> 
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>s
+                </li>
+                
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search healing actions, APIs, or automation rules...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="self-healing-dashboard">
+                <!-- Self-Healing Overview Card -->
+                <div class="card healing-overview">
+                    <div class="card-header">
+                        <h3>Self-Healing Overview</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="healing-stats">
+                        <div class="stat-card success">
+                            <span>Auto-Resolved Issues</span>
+                            <h4>28</h4>
+                        </div>
+                        <div class="stat-card warning">
+                            <span>Manual Interventions</span>
+                            <h4>7</h4>
+                        </div>
+                        <div class="stat-card info">
+                            <span>Healing In Progress</span>
+                            <h4>3</h4>
+                        </div>
+                        <div class="stat-card critical">
+                            <span>Failed Healing</span>
+                            <h4>2</h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Healing Actions Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Current Healing Actions</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="healing-list">
+                        <li class="healing-item">
+                            <div class="healing-icon automated">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="healing-content">
+                                <h4>API Gateway Scaling <span class="healing-badge automated">Automated</span></h4>
+                                <p>Auto-scaling Payment API instances to handle traffic surge</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill automated" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                            <div class="healing-time">Live</div>
+                        </li>
+                        <li class="healing-item">
+                            <div class="healing-icon manual">
+                                <i class="fas fa-user-cog"></i>
+                            </div>
+                            <div class="healing-content">
+                                <h4>Database Connection Repair <span class="healing-badge manual">Manual</span></h4>
+                                <p>Restoring connection pool for Customer Profile API</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill manual" style="width: 45%;"></div>
+                                </div>
+                            </div>
+                            <div class="healing-time">12m</div>
+                        </li>
+                        <li class="healing-item">
+                            <div class="healing-icon planned">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="healing-content">
+                                <h4>Certificate Rotation <span class="healing-badge planned">Planned</span></h4>
+                                <p>Scheduled renewal of expiring TLS certificates</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill planned" style="width: 15%;"></div>
+                                </div>
+                            </div>
+                            <div class="healing-time">Scheduled</div>
+                        </li>
+                        <li class="healing-item">
+                            <div class="healing-icon automated">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="healing-content">
+                                <h4>Rate Limit Adjustment <span class="healing-badge automated">Automated</span></h4>
+                                <p>Dynamic adjustment of rate limits based on traffic patterns</p>
+                                <div class="progress-bar">
+                                    <div class="progress-fill automated" style="width: 90%;"></div>
+                                </div>
+                            </div>
+                            <div class="healing-time">Live</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Self-Healing Rules Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Automation Rules</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <ul class="rule-list">
+                        <li class="rule-item">
+                            <div class="rule-name">Auto-Scale API Instances</div>
+                            <label class="rule-toggle">
+                                <input type="checkbox" checked>
+                                <span class="rule-slider"></span>
+                            </label>
+                        </li>
+                        <li class="rule-item">
+                            <div class="rule-name">Circuit Breaker Activation</div>
+                            <label class="rule-toggle">
+                                <input type="checkbox" checked>
+                                <span class="rule-slider"></span>
+                            </label>
+                        </li>
+                        <li class="rule-item">
+                            <div class="rule-name">Database Connection Reset</div>
+                            <label class="rule-toggle">
+                                <input type="checkbox" checked>
+                                <span class="rule-slider"></span>
+                            </label>
+                        </li>
+                        <li class="rule-item">
+                            <div class="rule-name">Dynamic Rate Limiting</div>
+                            <label class="rule-toggle">
+                                <input type="checkbox" checked>
+                                <span class="rule-slider"></span>
+                            </label>
+                        </li>
+                        <li class="rule-item">
+                            <div class="rule-name">Auto-Retry Failed Transactions</div>
+                            <label class="rule-toggle">
+                                <input type="checkbox">
+                                <span class="rule-slider"></span>
+                            </label>
+                        </li>
+                        <li class="rule-item">
+                            <div class="rule-name">Automatic Failover</div>
+                            <label class="rule-toggle">
+                                <input type="checkbox" checked>
+                                <span class="rule-slider"></span>
+                            </label>
+                        </li>
+                    </ul>
+                    <div class="action-buttons">
+                        <button class="action-btn primary"><i class="fas fa-plus"></i> Add Rule</button>
+                        <button class="action-btn secondary"><i class="fas fa-cog"></i> Configure</button>
+                    </div>
+                </div>
+                
+                <!-- API Health Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>API Health Status</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="api-health-grid">
+                        <div class="api-health-item">
+                            <div class="api-health-header">
+                                <div class="api-health-title">Payment Gateway API</div>
+                                <div class="api-health-status healthy"></div>
+                            </div>
+                            <div class="api-health-metrics">
+                                <div class="api-metric">
+                                    <span>Latency</span>
+                                    <strong>45ms</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Error Rate</span>
+                                    <strong>0.01%</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Uptime</span>
+                                    <strong>99.99%</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="api-health-item">
+                            <div class="api-health-header">
+                                <div class="api-health-title">Customer Profile API</div>
+                                <div class="api-health-status healing"></div>
+                            </div>
+                            <div class="api-health-metrics">
+                                <div class="api-metric">
+                                    <span>Latency</span>
+                                    <strong>92ms</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Error Rate</span>
+                                    <strong>1.8%</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Uptime</span>
+                                    <strong>99.5%</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="api-health-item">
+                            <div class="api-health-header">
+                                <div class="api-health-title">Transaction History API</div>
+                                <div class="api-health-status healthy"></div>
+                            </div>
+                            <div class="api-health-metrics">
+                                <div class="api-metric">
+                                    <span>Latency</span>
+                                    <strong>68ms</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Error Rate</span>
+                                    <strong>0.05%</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Uptime</span>
+                                    <strong>99.97%</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="api-health-item">
+                            <div class="api-health-header">
+                                <div class="api-health-title">Account Management API</div>
+                                <div class="api-health-status degraded"></div>
+                            </div>
+                            <div class="api-health-metrics">
+                                <div class="api-metric">
+                                    <span>Latency</span>
+                                    <strong>215ms</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Error Rate</span>
+                                    <strong>2.4%</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Uptime</span>
+                                    <strong>99.8%</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="api-health-item">
+                            <div class="api-health-header">
+                                <div class="api-health-title">Authentication API</div>
+                                <div class="api-health-status healthy"></div>
+                            </div>
+                            <div class="api-health-metrics">
+                                <div class="api-metric">
+                                    <span>Latency</span>
+                                    <strong>32ms</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Error Rate</span>
+                                    <strong>0.008%</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Uptime</span>
+                                    <strong>100%</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="api-health-item">
+                            <div class="api-health-header">
+                                <div class="api-health-title">Fraud Detection API</div>
+                                <div class="api-health-status failing"></div>
+                            </div>
+                            <div class="api-health-metrics">
+                                <div class="api-metric">
+                                    <span>Latency</span>
+                                    <strong>450ms</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Error Rate</span>
+                                    <strong>8.2%</strong>
+                                </div>
+                                <div class="api-metric">
+                                    <span>Uptime</span>
+                                    <strong>94.3%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Healing Timeline Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Healing Timeline</h3>
+                        <div class="more"><i class="fas fa-ellipsis-v"></i></div>
+                    </div>
+                    <div class="healing-timeline">

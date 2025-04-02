@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barclays API Guardian - Settings</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066b3;
+            --secondary: #00395d;
+            --accent: #00a0df;
+            --success: #36b37e;
+            --warning: #ffab00;
+            --danger: #ff5630;
+            --light: #f4f5f7;
+            --dark: #172b4d;
+            --bg: #f9fafb;
+            --text: #253858;
+            --border: #dfe1e6;
+            --info: #0065ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--secondary);
+            color: white;
+            min-height: 100vh;
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-header img {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+        
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #919191;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .user-profile span {
+            font-weight: 500;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-header .more {
+            cursor: pointer;
+            color: #919191;
+            padding: 5px;
+        }
+        
+        /* Settings Dashboard */
+        .settings-dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+        
+        /* Settings Sidebar */
+        .settings-sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .settings-menu {
+            list-style: none;
+        }
+        
+        .settings-menu li {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text);
+        }
+        
+        .settings-menu li:hover {
+            background: var(--light);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .settings-menu li.active {
+            background: var(--light);
+            border-left: 4px solid var(--accent);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .settings-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Settings Content */
+        .settings-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+        }
+        
+        .settings-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 102, 179, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-group .help-text {
+            font-size: 12px;
+            color: #667586;
+            margin-top: 5px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* Switch row */
+        .switch-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        
+        .switch-label {
+            font-size: 14px;
+            flex: 1;
+        }
+        
+        .switch-description {
+            font-size: 12px;
+            color: #667586;
+            margin-top: 2px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0059a0;
+        }
+        
+        .btn-secondary {
+            background: var(--light);
+            color: var(--text);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e6e8eb;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #e64d2e;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* API Keys Table */
+        .api-keys-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .api-keys-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background-color: var(--light);
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .api-keys-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .api-keys-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.active {
+            background-color: rgba(54, 179, 126, 0.1);
+            color: var(--success);
+        }
+        
+        .status-badge.inactive {
+            background-color: rgba(151, 151, 151, 0.1);
+            color: #666;
+        }
+        
+        .key-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .key-actions button {
+            background: none;
+            border: none;
+            color: #667586;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        
+        .key-actions button:hover {
+            color: var(--primary);
+        }
+        
+        .key-actions button.delete:hover {
+            color: var(--danger);
+        }
+        
+        /* Custom Radio Buttons */
+        .custom-radio {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .radio-option {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .radio-option:hover {
+            border-color: var(--primary);
+            background-color: rgba(0, 102, 179, 0.02);
+        }
+        
+        .radio-option.selected {
+            border-color: var(--primary);
+            background-color: rgba(0, 102, 179, 0.05);
+        }
+        
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .radio-option-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+        }
+        
+        .radio-option-title i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+        
+        .radio-option-description {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        /* Audit Log Table */
+        .audit-log-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .audit-log-table th {
+            text-align: left;
+            padding: 12px 15px;
+            background-color: var(--light);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .audit-log-table td {
+            padding: 12px 15px;
+            border-top: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        /* Color Picker */
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .color-option.selected {
+            border-color: var(--text);
+            transform: scale(1.1);
+        }
+        
+        .color-blue {
+            background-color: #0066b3;
+        }
+        
+        .color-green {
+            background-color: #36b37e;
+        }
+        
+        .color-purple {
+            background-color: #6554c0;
+        }
+        
+        .color-orange {
+            background-color: #ff8b00;
+        }
+        
+        .color-red {
+            background-color: #ff5630;
+        }
+        
+        /* Notifications Settings */
+        .notification-setting {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .notification-setting:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-setting-title {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .notification-setting-description {
+            font-size: 13px;
+            color: #667586;
+            margin-bottom: 10px;
+        }
+        
+        .notification-channels {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .channel-option {
+            display: flex;
+            align-items: center;
+        }
+        
+        .channel-option input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        /* Team Members */
+        .member-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .member-role {
+            font-size: 12px;
+            color: #667586;
+        }
+        
+        .member-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Section Divider */
+        .section-divider {
+            border-top: 1px solid var(--border);
+            margin: 25px 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .settings-dashboard {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            
+            .settings-sidebar {
+                margin-bottom: 20px;
+            }
+            
+            .settings-menu {
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 0;
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .settings-menu li {
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                min-width: fit-content;
+            }
+            
+            .settings-menu li.active,
+            .settings-menu li:hover {
+                border-left: none;
+                border-bottom: 3px solid var(--accent);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+            
+            .main {
+                padding: 15px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .custom-radio {
+                flex-direction: column;
+            }
+            
+            .notification-channels {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 102, 179, 0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .ai-assistant:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 102, 179, 0.4);
+        }
+        
+        .ai-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+        
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+        
+        @keyframes pulse-animation {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 102, 179, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(0, 102, 179, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 102, 179, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo.png" alt="Logo" style="width: 50px; height: auto;">
+                <h3>NeuralAPI</h3>
+            </div>
+            <ul class="sidebar-menu">
+                <li style="list-style: none;">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <a href="dashboard.html" style="text-decoration: none; color: inherit;">Dashboard</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-chart-line"></i> 
+                    <a href="analytics.html" style="text-decoration: none; color: inherit;">Analytics</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-bell"></i>
+                    <a href="alerts.html" style="text-decoration: none; color: inherit;">Alerts</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-project-diagram"></i>
+                    <a href="apimap.html" style="text-decoration: none; color: inherit;">API Map</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-shield-alt"></i>
+                    <a href="security.html" style="text-decoration: none; color: inherit;">Security</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-history"></i>
+                    <a href="audit.html" style="text-decoration: none; color: inherit;">Audit Logs</a>
+                </li>
+                <li style="list-style: none;">
+                    <i class="fas fa-tools"></i> 
+                    <a href="selfheal.html" style="text-decoration: none; color: inherit;">Self-Healing</a>
+                </li>
+                <li class="active" style="list-style: none;">
+                    <i class="fas fa-cog"></i>
+                    <a href="settings.html" style="text-decoration: none; color: inherit;">Settings</a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <div class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search settings...">
+                </div>
+                <div class="user-profile">
+                    <img src="images/barclayslogo.png" alt="Profile">
+                    <span>Barclays Admin</span>
+                </div>
+            </div>
+            
+            <div class="settings-dashboard">
+                <!-- Settings Sidebar -->
+                <div class="settings-sidebar">
+                    <ul class="settings-menu">
+                        <li class="active">
+                            <i class="fas fa-user"></i> User Profile
+                        </li>
+                        <li>
+                            <i class="fas fa-key"></i> API Keys
+                        </li>
+                        <li>
+                            <i class="fas fa-bell"></i> Notifications
+                        </li>
+                        <li>
+                            <i class="fas fa-users"></i> Team Management
+                        </li>
+                        <li>
+                            <i class="fas fa-palette"></i> Appearance
+                        </li>
+                        <li>
+                            <i class="fas fa-plug"></i> Integrations
+                        </li>
+                        <li>
+                            <i class="fas fa-shield-alt"></i> Security
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i> Email Settings
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i> Audit Log
+                        </li>
+                        <li>
+                            <i class="fas fa-database"></i> Data Management
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Settings Content -->
+                <div class="settings-content">
+                    <h2 class="settings-title">User Profile</h2>
+                    
+                    <div class="form-group">
+                        <label>Profile Picture</label>
+                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                            <img src="/api/placeholder/80/80" alt="Profile" style="width: 80px; height: 80px; border-radius: 50%; margin-right: 20px;">
+                            <div>
+                                <button class="btn btn-secondary">Change Picture</button>
+                                <div class="help-text">Maximum size: 5MB. Supported formats: JPG, PNG</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" value="Barclays">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" value="Admin">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" value="admin@barclays.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Job Title</label>
+                        <input type="text" value="API Security Administrator">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select>
+                            <option>Information Security</option>
+                            <option>API Development</option>
+                            <option>DevOps</option>
+                            <option>IT Administration</option>
+                            <option>Engineering</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Time Zone</label>
+                        <select>
+                            <option>GMT (London)</option>
+                            <option>EST (New York)</option>
+                            <option>PST (San Francisco)</option>
+                            <option>IST (Mumbai)</option>
+                            <option>SGT (Singapore)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="switch-row">
+                        <div>
+                            <div class="switch-label">Two-Factor Authentication</div>
+                            <div class="switch-description">Enable 2FA for additional account security</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="section-divider"></div>
+                    
+                    <h3 style="font-size: 16px; margin-bottom: 15px;">Password Settings</h3>
+                    
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" placeholder="Enter current password">
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" placeholder="Enter new password">
+                            <div class="help-text">Password must be at least 12 characters with uppercase, lowercase, numbers, and special characters</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" placeholder="Confirm new password">
+                        </div>
+                    </div>
+                    
+                    <div class="section-divider"></div>
+                    
+                    <h3 style="font-size: 16px; margin-bottom: 15px;">Preferences</h3>
+                    
+                    <div class="switch-row">
+                        <div>
+                            <div class="switch-label">Email Notifications</div>
+                            <div class="switch-description">Receive system notifications via email</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-row">
+                        <div>
+                            <div class="switch-label">Dashboard Auto-Refresh</div>
+                            <div class="switch-description">Automatically refresh dashboard data every 5 minutes</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="switch-row">
+                        <div>
+                            <div class="switch-label">Dark Mode</div>
+                            <div class="switch-description">Switch to dark theme</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Default Dashboard View</label>
+                        <div class="custom-radio">
+                            <div class="radio-option selected">
+                                <input type="radio" name="dashboard-view" id="summary" checked>
+                                <div class="radio-option-title">
+                                    <i class="fas fa-th
