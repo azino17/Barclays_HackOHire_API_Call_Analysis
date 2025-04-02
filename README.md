@@ -1,3 +1,11 @@
+Team ZeroPoint8
+Team Member’s Name	Year	Branch	PRN	Email
+Ayush Khambayate	TY	CS	12210365	ayush.khambayate22@vit.edu
+Vanshika Dongare	TY	CS	12211128	vanshika.dongare22@vit.edu
+Aditya Kondewar	TY	CS	12211510	aditya.kondewar22@vit.edu
+Prem Borse	TY	CS	12320087	prem.borse23@vit.edu
+Saloni Khandelwal	TY	CS	12210427	saloni.khandelwal22@vit.edu
+
 # Barclays_HackOHire_API_Call_Analysis
 🚀 Alert Manager
 A MongoDB-based alert management system that detects anomalies in API calls and generates alerts based on severity, environment, and API name.
